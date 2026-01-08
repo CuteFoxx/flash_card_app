@@ -1,0 +1,46 @@
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+      context: ./backend
+      target: debug
+    volumes:
+      - ./backend:/src
+      - /src/node_modules
+    env_file:
+      - ./backend/.env
+    ports:
+      - "${PORT}:${PORT}"
+      - "${DEBUG_PORT}:${DEBUG_PORT}"
+    depends_on:
+      - db
+      - redis
+  frontend:
+    build:
+      dockerfile: Dockerfile
+      context: ./frontend
+    volumes:
+      - ./frontend:/src
+      - /src/node_modules
+    depends_on:
+      - backend
+    ports:
+      - 3000:3000
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - "${DB_PORT}:5432"
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+volumes:
+  postgres_data:
